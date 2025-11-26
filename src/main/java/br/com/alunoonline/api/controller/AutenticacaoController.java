@@ -1,6 +1,9 @@
 package br.com.alunoonline.api.controller;
 
 import br.com.alunoonline.api.dtos.DadosAutenticacaoDTO;
+import br.com.alunoonline.api.infra.security.DadosTokenJWT;
+import br.com.alunoonline.api.infra.security.TokenService;
+import br.com.alunoonline.api.model.Usuario;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +20,14 @@ public class AutenticacaoController {
 
     @Autowired
     private AuthenticationManager manager;
-
+    @Autowired
+    private TokenService tokenService;
     @PostMapping
     public ResponseEntity efetuarLogin(@RequestBody @Valid DadosAutenticacaoDTO dados){
         var token = new UsernamePasswordAuthenticationToken
                 (dados.login(), dados.senha());
-        manager.authenticate(token);
-        return ResponseEntity.ok().build();
+        var authentication = manager.authenticate(token);
+        var tokenJWT = tokenService.generateToken((Usuario) authentication.getPrincipal());
+        return ResponseEntity.ok(new DadosTokenJWT(tokenJWT));
     }
 }
